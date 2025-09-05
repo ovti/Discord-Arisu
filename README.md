@@ -26,6 +26,5 @@ A Discord bot that scrapes a website for changes and reports its status to a Dis
 ```bash
   python main.py
 ```
-
 ### Planned Features
 - Support for discord slash commands.
