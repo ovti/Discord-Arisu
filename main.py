@@ -5,6 +5,8 @@ import re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+from flask import Flask
+from threading import Thread
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -13,7 +15,7 @@ URL = os.getenv("URL")
 
 YEAR_FILE = "last_year.txt"
 
-# load last year from file if exists
+# load last_year from file if exists
 if os.path.exists(YEAR_FILE):
     with open(YEAR_FILE, "r", encoding="utf-8") as f:
         last_year = f.read().strip()
@@ -56,14 +58,11 @@ class YearWatcherBot(discord.Client):
 
                 if last_year is None:
                     last_year = current_year
-                    print(f"Initial year set to {last_year}")
                     await channel.send(f"Nadal brak nowego planu 😒 Obecny plan: {last_year}.")
                     self.save_year(last_year)
 
                 elif current_year != last_year:
-                    await channel.send(
-                        f"@everyone Nowy plan **{current_year}** !! 📅\n{URL}"
-                    )
+                    await channel.send(f"@everyone Nowy plan **{current_year}** !! 📅\n{URL}")
                     last_year = current_year
                     self.save_year(last_year)
 
@@ -83,16 +82,14 @@ class YearWatcherBot(discord.Client):
             if last_year:
                 await message.channel.send(f"📅 Aktualny plan na stronie: **{last_year}**\n{URL}")
             else:
-                await message.channel.send("Nie udało się wykryć roku.")
+                await message.channel.send("Nie udało się jeszcze wykryć roku.")
 
         elif message.content.lower().startswith("!forcecheck"):
             await message.channel.send("🔍 Sprawdzam stronę...")
             current_year = await self.scrape_year()
             if current_year:
                 if last_year and current_year != last_year:
-                    await message.channel.send(
-                        f"@everyone Nowy plan **{current_year}** !! 📅\n{URL}"
-                    )
+                    await message.channel.send(f"@everyone Nowy plan **{current_year}** !! 📅\n{URL}")
                     last_year = current_year
                     self.save_year(last_year)
                 else:
@@ -101,7 +98,19 @@ class YearWatcherBot(discord.Client):
                 await message.channel.send("⚠️ Błąd podczas sprawdzania strony.")
 
     async def on_ready(self):
-        print(f"Logged in") 
+        print(f"✅ Logged in as {self.user}")
+
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+Thread(target=run).start()
 
 client = YearWatcherBot(intents=intents)
 client.run(TOKEN)
